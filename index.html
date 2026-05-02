@@ -7,7 +7,6 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/007AFF/ffffff?text=VJ">
 
     <style>
         :root {
@@ -21,7 +20,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, system-ui, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
@@ -29,97 +28,87 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- Animations --- */
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes cardSlide { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
-
-        /* --- Layout --- */
+        /* --- Header & Screens --- */
         header { padding: 60px 20px 20px; text-align: center; }
-        #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
-        #app-screen { display: none; overflow: hidden; }
+        #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        #app-screen { display: none; }
 
         .lesson-btn {
             background: var(--card-bg);
-            padding: 20px;
-            border-radius: 16px;
+            padding: 22px;
+            border-radius: 18px;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            font-weight: 600;
-            animation: fadeInUp 0.4s ease-out both;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.2s;
         }
+        .lesson-btn:active { transform: scale(0.97); }
 
         /* --- Card UI --- */
-        .card-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        .card-container { flex: 1; display: flex; align-items: center; justify-content: center; }
         .card {
             background: var(--card-bg);
             width: 100%;
-            min-height: 420px;
+            min-height: 450px;
             border-radius: 35px;
-            padding: 35px;
+            padding: 30px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.07);
-            transition: transform 0.1s ease;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+            position: relative;
         }
 
-        .card:active { transform: scale(0.98); }
-        .card.animating { animation: cardSlide 0.3s ease-in-out; }
-
-        .word-text { font-size: 44px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; }
+        .word-text { font-size: 46px; font-weight: 800; margin-bottom: 20px; color: var(--text); }
         
         .example-box { 
             opacity: 0; transform: translateY(10px); transition: 0.4s ease;
-            background: #f9f9fb; padding: 15px; border-radius: 15px;
-            font-style: italic; color: var(--text-sec); margin: 10px 0; font-size: 18px;
+            background: #f8f8fa; padding: 18px; border-radius: 20px;
+            font-style: italic; color: var(--text-sec); margin: 10px 0; font-size: 19px; line-height: 1.4;
         }
 
-        .details-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; text-align: left; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+        .details-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;}
         
-        /* Reveal Logic Classes */
+        /* Reveal Logic */
         .reveal-1 .example-box { opacity: 1; transform: translateY(0); }
         .reveal-2 .example-box, .reveal-2 .details-box { opacity: 1; transform: translateY(0); }
 
-        .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 5px; }
-        .meaning-text { font-size: 18px; line-height: 1.4; margin-bottom: 15px; }
+        .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--primary); margin-bottom: 6px; }
+        .meaning-text { font-size: 18px; line-height: 1.5; margin-bottom: 18px; color: #3a3a3c; }
 
-        .chip { display: inline-block; padding: 5px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-right: 5px; margin-bottom: 5px; }
+        .chip { display: inline-block; padding: 6px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
         .syn { background: #E1F5FE; color: #0288D1; }
         .ant { background: #FFF3E0; color: #F57C00; }
 
         /* --- Controls --- */
-        .nav-bar { display: flex; gap: 15px; padding: 20px 0; }
-        .nav-btn { flex: 1; padding: 18px; border-radius: 18px; border: none; font-size: 16px; font-weight: 700; }
+        .nav-bar { display: flex; gap: 15px; padding: 25px 0 10px; }
+        .nav-btn { flex: 1; padding: 20px; border-radius: 20px; border: none; font-size: 17px; font-weight: 700; transition: opacity 0.2s; }
         .btn-prev { background: #e5e5ea; color: var(--text); }
         .btn-next { background: var(--primary); color: white; }
+        .nav-btn:active { opacity: 0.7; }
 
-        .progress { text-align: center; font-size: 13px; color: var(--text-sec); font-weight: 500; }
+        .progress { text-align: center; font-size: 14px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
+        #loading { text-align: center; color: var(--text-sec); padding: 40px; }
     </style>
 </head>
 <body>
 
     <div id="menu-screen">
         <header><h1>Vocab Journey</h1></header>
-        <div id="lesson-list">Connecting to Sheets...</div>
+        <div id="lesson-list"><div id="loading">Syncing with Google Sheets...</div></div>
     </div>
 
     <div id="app-screen">
-        <div onclick="goBack()" style="color: var(--primary); font-weight: 600; margin-bottom: 10px;">← Lessons</div>
+        <div onclick="goBack()" style="color: var(--primary); font-weight: 700; margin-bottom: 20px; font-size: 18px;">← Lessons</div>
         
         <div class="card-container">
             <div id="main-card" class="card" onclick="handleCardClick()">
@@ -148,55 +137,72 @@
 
     <script>
         // --- 1. CONFIGURATION ---
-        // ADD YOUR PUBLISHED CSV LINKS HERE
+        // Paste your Published CSV links here
         const sheetLinks = {
-            "Lesson 1": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKa_UznG5YNoBdDDz6O1oLPpg27HOeRbvAyEJ430icuHl4ki9gZt3o7VakCabFia3JmAOvTgbASuN8/pub?gid=0&single=true&output=csv",
-            // "Lesson 2": "LINK_FOR_TAB_2",
+            "Lesson 1": "PASTE_YOUR_CSV_LINK_HERE"
         };
 
         let db = {};
         let currentLessonData = [];
         let currentIndex = 0;
-        let revealStep = 0; // 0: Word, 1: Example, 2: Details
+        let revealStep = 0;
 
-        // --- 2. DATA LOADING ---
+        // --- 2. CSV PARSING (FIXED) ---
         async function init() {
-            const listEl = document.getElementById('lesson-list');
             try {
                 for (const [name, url] of Object.entries(sheetLinks)) {
-                    if (url.includes("YOUR_GOOGLE")) continue;
+                    if (url.includes("PASTE_YOUR")) continue;
                     const response = await fetch(url);
                     const text = await response.text();
                     db[name] = parseCSV(text);
                 }
                 renderMenu();
             } catch (err) {
-                listEl.innerText = "Error: Check your Google Sheet links.";
+                document.getElementById('loading').innerText = "Error syncing data. Check your links!";
             }
         }
 
         function parseCSV(text) {
-            const rows = text.split('\n').slice(1); // Skip header
-            return rows.map(row => {
-                // Splits by comma but ignores commas inside quotes
-                const cols = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
-                if (cols.length < 2) return null;
-                const clean = cols.map(c => c.replace(/^"|"$/g, '').trim());
+            const rows = text.split('\n').filter(row => row.trim() !== '');
+            const dataRows = rows.slice(1); // Skip Header
+            
+            return dataRows.map(row => {
+                let columns = [];
+                let current = '';
+                let inQuotes = false;
+
+                // Standard CSV logic: handles spaces and commas inside quotes
+                for (let i = 0; i < row.length; i++) {
+                    let char = row[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        columns.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                columns.push(current.trim());
+
                 return {
-                    word: clean[0], example: clean[1], meaning: clean[2],
-                    syns: [clean[3], clean[4]], ants: [clean[5], clean[6]]
+                    word: columns[0],
+                    example: columns[1],
+                    meaning: columns[2],
+                    syns: [columns[3], columns[4]],
+                    ants: [columns[5], columns[6]]
                 };
-            }).filter(r => r !== null);
+            }).filter(item => item.word); 
         }
 
-        // --- 3. UI LOGIC ---
+        // --- 3. NAVIGATION ---
         function renderMenu() {
             const listEl = document.getElementById('lesson-list');
             listEl.innerHTML = '';
             Object.keys(db).forEach(name => {
                 const div = document.createElement('div');
                 div.className = 'lesson-btn';
-                div.innerHTML = `<span>${name}</span><span style="color:var(--primary)">→</span>`;
+                div.innerHTML = `<span>${name}</span><span>→</span>`;
                 div.onclick = () => startLesson(name);
                 listEl.appendChild(div);
             });
@@ -207,36 +213,23 @@
             currentIndex = 0;
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
-            updateCard(false);
+            updateCard();
         }
 
         function handleCardClick() {
             if (revealStep < 2) {
                 revealStep++;
-                renderRevealState();
+                document.getElementById('main-card').className = `card reveal-${revealStep}`;
             }
         }
 
-        function updateCard(animate = true) {
-            const card = document.getElementById('main-card');
+        function updateCard() {
             const data = currentLessonData[currentIndex];
             revealStep = 0;
-
-            if (animate) {
-                card.classList.add('animating');
-                setTimeout(() => {
-                    fillCardData(data);
-                    card.classList.remove('animating');
-                }, 150);
-            } else {
-                fillCardData(data);
-            }
-        }
-
-        function fillCardData(data) {
             document.getElementById('main-card').className = 'card';
+            
             document.getElementById('display-word').innerText = data.word;
-            document.getElementById('display-example').innerText = `"${data.example}"`;
+            document.getElementById('display-example').innerText = data.example;
             document.getElementById('display-meaning').innerText = data.meaning;
             
             document.getElementById('display-syn').innerHTML = data.syns.filter(s => s).map(s => `<span class="chip syn">${s}</span>`).join('');
@@ -245,17 +238,12 @@
             document.getElementById('progress-text').innerText = `${currentIndex + 1} of ${currentLessonData.length}`;
         }
 
-        function renderRevealState() {
-            const card = document.getElementById('main-card');
-            card.className = `card reveal-${revealStep}`;
-        }
-
         function nextWord() {
             if (currentIndex < currentLessonData.length - 1) {
                 currentIndex++;
                 updateCard();
             } else {
-                alert("You've reached the end!");
+                alert("Well done! End of lesson.");
                 goBack();
             }
         }
