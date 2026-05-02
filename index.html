@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>VocabFlow</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VocabFlow">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/007AFF/ffffff?text=V">
+
+    <style>
+        :root {
+            --bg: #f2f2f7;
+            --card-bg: #ffffff;
+            --primary: #007AFF;
+            --text-main: #1c1c1e;
+            --text-sec: #8e8e93;
+            --accent: #5856d6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- Header --- */
+        header {
+            padding: 60px 20px 20px;
+            background: var(--bg);
+            text-align: center;
+        }
+
+        h1 { font-size: 34px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+
+        /* --- Lesson Selection Screen --- */
+        #lesson-screen {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .lesson-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .lesson-card:active { transform: scale(0.97); }
+
+        .lesson-info h3 { margin: 0; font-size: 18px; }
+        .lesson-info p { margin: 5px 0 0; color: var(--text-sec); font-size: 14px; }
+
+        /* --- Flashcard Screen --- */
+        #flashcard-screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            padding: 20px;
+            padding-bottom: 40px;
+            box-sizing: border-box;
+        }
+
+        .back-btn {
+            color: var(--primary);
+            font-weight: 600;
+            border: none;
+            background: none;
+            font-size: 17px;
+            padding: 0;
+            margin-bottom: 20px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .card-container {
+            flex: 1;
+            perspective: 1000px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: var(--card-bg);
+            width: 100%;
+            height: 100%;
+            max-height: 450px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Reveal States --- */
+        .word-display { font-size: 42px; font-weight: 800; color: var(--text-main); margin-bottom: 20px; }
+        
+        .example-display { 
+            font-size: 18px; 
+            color: var(--text-sec); 
+            font-style: italic; 
+            margin: 10px 0;
+            padding: 15px;
+            background: #f9f9fb;
+            border-radius: 12px;
+        }
+
+        .details-display {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: left;
+        }
+
+        .meaning-title { font-weight: 700; color: var(--accent); text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+        .meaning-text { font-size: 18px; margin: 5px 0 15px; line-height: 1.4; }
+        
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .chip { padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+        .syn-chip { background: #e1f5fe; color: #0288d1; }
+        .ant-chip { background: #fff3e0; color: #f57c00; }
+
+        .hidden { display: none !important; }
+
+        /* --- Navigation --- */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 18px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .prev-btn { background: #e5e5ea; color: var(--text-main); }
+        .next-btn { background: var(--primary); color: white; }
+        .nav-btn:active { opacity: 0.7; }
+        .nav-btn:disabled { opacity: 0.3; }
+
+        .progress-text { text-align: center; color: var(--text-sec); font-size: 14px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="lesson-screen">
+        <header>
+            <h1>My Vocabulary</h1>
+        </header>
+        <div id="lesson-list">
+            </div>
+    </div>
+
+    <div id="flashcard-screen">
+        <button class="back-btn" onclick="showLessons()">← Lessons</button>
+        
+        <div class="card-container">
+            <div class="card" id="vocab-card" onclick="nextStep()">
+                <div id="word" class="word-display">Word</div>
+                
+                <div id="example-box" class="example-display hidden">
+                    "This is an example sentence."
+                </div>
+                
+                <div id="details-box" class="details-display hidden">
+                    <div class="meaning-title">Meaning</div>
+                    <div id="meaning" class="meaning-text">The definition goes here.</div>
+                    
+                    <div class="meaning-title" style="color: #0288d1;">Synonyms</div>
+                    <div id="synonyms" class="chips-container"></div>
+                    
+                    <div class="meaning-title" style="color: #f57c00;">Antonyms</div>
+                    <div id="antonyms" class="chips-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="nav-btn prev-btn" onclick="prevWord()">Back</button>
+            <button class="nav-btn next-btn" onclick="nextWord()">Next Word</button>
+        </div>
+        <div class="progress-text" id="progress">1 of 10</div>
+    </div>
+
+    <script>
+        const vocabularyData = {
+            "Lesson 1: Key Terms": [
+                {
+                    word: "Banal",
+                    example: "The plot of the movie was so banal that I fell asleep halfway through.",
+                    meaning: "Lacking in originality as to be obvious and boring.",
+                    syn: ["Trite", "Hackneyed"],
+                    ant: ["Original", "Innovative"]
+                },
+                {
+                    word: "Malleable",
+                    example: "Gold is a very malleable metal, making it ideal for intricate jewelry.",
+                    meaning: "Able to be hammered or pressed out of shape; easily influenced.",
+                    syn: ["Pliable", "Ductile"],
+                    ant: ["Rigid", "Inflexible"]
+                },
+                {
+                    word: "Commendable",
+                    example: "His dedication to the charity project was truly commendable.",
+                    meaning: "Deserving praise and approval.",
+                    syn: ["Praiseworthy", "Admirable"],
+                    ant: ["Reprehensible", "Deplorable"]
+                }
+            ],
+            "Lesson 2: More Words": [
+                {
+                    word: "Eloquence",
+                    example: "The orator spoke with such eloquence that the audience was moved to tears.",
+                    meaning: "Fluent or persuasive speaking or writing.",
+                    syn: ["Fluency", "Articulacy"],
+                    ant: ["Inarticulacy", "Dullness"]
+                }
+            ]
+        };
+
+        let currentLesson = [];
+        let currentIndex = 0;
+        let step = 0; // 0: Word, 1: Example, 2: All
+
+        function init() {
+            const list = document.getElementById('lesson-list');
+            for (let lessonTitle in vocabularyData) {
+                const count = vocabularyData[lessonTitle].length;
+                const div = document.createElement('div');
+                div.className = 'lesson-card';
+                div.innerHTML = `
+                    <div class="lesson-info">
+                        <h3>${lessonTitle}</h3>
+                        <p>${count} Words</p>
+                    </div>
+                    <div style="color: #007AFF; font-weight: bold;">→</div>
+                `;
+                div.onclick = () => startLesson(lessonTitle);
+                list.appendChild(div);
+            }
+        }
+
+        function startLesson(title) {
+            currentLesson = vocabularyData[title];
+            currentIndex = 0;
+            step = 0;
+            document.getElementById('lesson-screen').style.display = 'none';
+            document.getElementById('flashcard-screen').style.display = 'flex';
+            updateCard();
+        }
+
+        function showLessons() {
+            document.getElementById('lesson-screen').style.display = 'block';
+            document.getElementById('flashcard-screen').style.display = 'none';
+        }
+
+        function nextStep() {
+            if (step < 2) {
+                step++;
+                updateCard();
+            }
+        }
+
+        function updateCard() {
+            const data = currentLesson[currentIndex];
+            
+            // Text Content
+            document.getElementById('word').innerText = data.word;
+            document.getElementById('example-box').innerText = `"${data.example}"`;
+            document.getElementById('meaning').innerText = data.meaning;
+            
+            // Clear and build chips
+            const synContainer = document.getElementById('synonyms');
+            const antContainer = document.getElementById('antonyms');
+            synContainer.innerHTML = '';
+            antContainer.innerHTML = '';
+            
+            data.syn.forEach(s => synContainer.innerHTML += `<span class="chip syn-chip">${s}</span>`);
+            data.ant.forEach(a => antContainer.innerHTML += `<span class="chip ant-chip">${a}</span>`);
+
+            // Visibility Logic
+            document.getElementById('example-box').classList.toggle('hidden', step < 1);
+            document.getElementById('details-box').classList.toggle('hidden', step < 2);
+            
+            // Progress
+            document.getElementById('progress').innerText = `${currentIndex + 1} of ${currentLesson.length}`;
+            
+            // Disable "Prev" if at start
+            document.querySelector('.prev-btn').disabled = (currentIndex === 0);
+        }
+
+        function nextWord() {
+            if (currentIndex < currentLesson.length - 1) {
+                currentIndex++;
+                step = 0;
+                updateCard();
+            } else {
+                alert("Lesson Complete!");
+                showLessons();
+            }
+        }
+
+        function prevWord() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                step = 0;
+                updateCard();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
