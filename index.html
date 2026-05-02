@@ -14,9 +14,7 @@
             --card-bg: #ffffff;
             --primary: #007AFF;
             --text: #1c1c1e;
-            --text-sec: #8e8e93;
-            --accent-blue: #007AFF;
-            --accent-orange: #ff9500;
+            --text-sec: #636366;
         }
 
         body {
@@ -31,103 +29,87 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- Header & Screens --- */
         header { padding: 60px 20px 20px; text-align: center; }
         #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
         #app-screen { display: none; }
 
         .lesson-btn {
             background: var(--card-bg);
-            padding: 22px;
-            border-radius: 18px;
+            padding: 24px;
+            border-radius: 20px;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             font-weight: 700;
-            font-size: 18px;
-            transition: transform 0.2s;
+            font-size: 19px;
         }
-        .lesson-btn:active { transform: scale(0.97); }
 
-        /* --- Card UI --- */
         .card-container { flex: 1; display: flex; align-items: center; justify-content: center; }
         .card {
             background: var(--card-bg);
             width: 100%;
-            min-height: 450px;
-            border-radius: 35px;
-            padding: 30px;
+            min-height: 480px;
+            border-radius: 40px;
+            padding: 35px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
             text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
-            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
         }
 
-        .word-text { font-size: 46px; font-weight: 800; margin-bottom: 20px; color: var(--text); }
+        .word-text { font-size: 48px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1px; }
         
         .example-box { 
             opacity: 0; transform: translateY(10px); transition: 0.4s ease;
-            background: #f8f8fa; padding: 18px; border-radius: 20px;
-            font-style: italic; color: var(--text-sec); margin: 10px 0; font-size: 19px; line-height: 1.4;
+            background: #f1f1f4; padding: 20px; border-radius: 22px;
+            font-style: italic; color: #3a3a3c; margin: 15px 0; font-size: 20px; line-height: 1.4;
         }
 
-        .details-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;}
+        .details-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 20px; }
         
-        /* Reveal Logic */
         .reveal-1 .example-box { opacity: 1; transform: translateY(0); }
         .reveal-2 .example-box, .reveal-2 .details-box { opacity: 1; transform: translateY(0); }
 
-        .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--primary); margin-bottom: 6px; }
-        .meaning-text { font-size: 18px; line-height: 1.5; margin-bottom: 18px; color: #3a3a3c; }
+        .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 8px; }
+        .meaning-text { font-size: 19px; line-height: 1.5; margin-bottom: 20px; font-weight: 500; }
 
-        .chip { display: inline-block; padding: 6px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
-        .syn { background: #E1F5FE; color: #0288D1; }
-        .ant { background: #FFF3E0; color: #F57C00; }
+        .chip { display: inline-block; padding: 7px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
+        .syn { background: #E3F2FD; color: #1976D2; }
+        .ant { background: #FFF3E0; color: #E65100; }
 
-        /* --- Controls --- */
         .nav-bar { display: flex; gap: 15px; padding: 25px 0 10px; }
-        .nav-btn { flex: 1; padding: 20px; border-radius: 20px; border: none; font-size: 17px; font-weight: 700; transition: opacity 0.2s; }
+        .nav-btn { flex: 1; padding: 22px; border-radius: 22px; border: none; font-size: 18px; font-weight: 700; }
         .btn-prev { background: #e5e5ea; color: var(--text); }
         .btn-next { background: var(--primary); color: white; }
-        .nav-btn:active { opacity: 0.7; }
 
         .progress { text-align: center; font-size: 14px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
-        #loading { text-align: center; color: var(--text-sec); padding: 40px; }
     </style>
 </head>
 <body>
 
     <div id="menu-screen">
         <header><h1>Vocab Journey</h1></header>
-        <div id="lesson-list"><div id="loading">Syncing with Google Sheets...</div></div>
+        <div id="lesson-list"><p style="text-align:center">Loading Lessons...</p></div>
     </div>
 
     <div id="app-screen">
         <div onclick="goBack()" style="color: var(--primary); font-weight: 700; margin-bottom: 20px; font-size: 18px;">← Lessons</div>
-        
         <div class="card-container">
             <div id="main-card" class="card" onclick="handleCardClick()">
                 <div id="display-word" class="word-text"></div>
                 <div id="display-example" class="example-box"></div>
-                
                 <div id="display-details" class="details-box">
                     <div class="label">Meaning</div>
                     <div id="display-meaning" class="meaning-text"></div>
-                    
-                    <div class="label" style="color:var(--accent-blue)">Synonyms</div>
-                    <div id="display-syn"></div>
-                    
-                    <div class="label" style="color:var(--accent-orange); margin-top:10px;">Antonyms</div>
-                    <div id="display-ant"></div>
+                    <div class="label">Synonyms</div><div id="display-syn"></div>
+                    <div class="label" style="margin-top:10px;">Antonyms</div><div id="display-ant"></div>
                 </div>
             </div>
         </div>
-
         <div class="nav-bar">
             <button class="nav-btn btn-prev" onclick="prevWord()">Back</button>
             <button class="nav-btn btn-next" onclick="nextWord()">Next Word</button>
@@ -136,10 +118,8 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        // Paste your Published CSV links here
         const sheetLinks = {
-            "Lesson 1": "PASTE_YOUR_CSV_LINK_HERE"
+            "Lesson 1": "PASTE_YOUR_LINK_HERE"
         };
 
         let db = {};
@@ -147,73 +127,67 @@
         let currentIndex = 0;
         let revealStep = 0;
 
-        // --- 2. CSV PARSING (FIXED) ---
         async function init() {
             try {
                 for (const [name, url] of Object.entries(sheetLinks)) {
                     if (url.includes("PASTE_YOUR")) continue;
                     const response = await fetch(url);
-                    const text = await response.text();
-                    db[name] = parseCSV(text);
+                    const csvText = await response.text();
+                    db[name] = smartParse(csvText);
                 }
                 renderMenu();
-            } catch (err) {
-                document.getElementById('loading').innerText = "Error syncing data. Check your links!";
-            }
+            } catch (err) { console.error(err); }
         }
 
-        function parseCSV(text) {
-            const rows = text.split('\n').filter(row => row.trim() !== '');
-            const dataRows = rows.slice(1); // Skip Header
-            
-            return dataRows.map(row => {
-                let columns = [];
-                let current = '';
+        // PROPER LOGIC: Handles full sentences and ignores internal commas
+        function smartParse(text) {
+            const lines = text.split(/\r?\n/);
+            const dataRows = lines.slice(1).filter(line => line.trim() !== '');
+
+            return dataRows.map(line => {
+                const result = [];
+                let cell = '';
                 let inQuotes = false;
 
-                // Standard CSV logic: handles spaces and commas inside quotes
-                for (let i = 0; i < row.length; i++) {
-                    let char = row[i];
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
                     if (char === '"') {
                         inQuotes = !inQuotes;
                     } else if (char === ',' && !inQuotes) {
-                        columns.push(current.trim());
-                        current = '';
+                        result.push(cell.trim());
+                        cell = '';
                     } else {
-                        current += char;
+                        cell += char;
                     }
                 }
-                columns.push(current.trim());
+                result.push(cell.trim());
 
                 return {
-                    word: columns[0],
-                    example: columns[1],
-                    meaning: columns[2],
-                    syns: [columns[3], columns[4]],
-                    ants: [columns[5], columns[6]]
+                    word: result[0],
+                    example: result[1],
+                    meaning: result[2],
+                    syns: [result[3], result[4]],
+                    ants: [result[5], result[6]]
                 };
-            }).filter(item => item.word); 
+            }).filter(item => item.word);
         }
 
-        // --- 3. NAVIGATION ---
         function renderMenu() {
-            const listEl = document.getElementById('lesson-list');
-            listEl.innerHTML = '';
+            const list = document.getElementById('lesson-list');
+            list.innerHTML = '';
             Object.keys(db).forEach(name => {
-                const div = document.createElement('div');
-                div.className = 'lesson-btn';
-                div.innerHTML = `<span>${name}</span><span>→</span>`;
-                div.onclick = () => startLesson(name);
-                listEl.appendChild(div);
+                const d = document.createElement('div');
+                d.className = 'lesson-btn';
+                d.innerHTML = `<span>${name}</span><span>→</span>`;
+                d.onclick = () => {
+                    currentLessonData = db[name];
+                    currentIndex = 0;
+                    document.getElementById('menu-screen').style.display = 'none';
+                    document.getElementById('app-screen').style.display = 'flex';
+                    updateCard();
+                };
+                list.appendChild(d);
             });
-        }
-
-        function startLesson(name) {
-            currentLessonData = db[name];
-            currentIndex = 0;
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'flex';
-            updateCard();
         }
 
         function handleCardClick() {
@@ -227,38 +201,21 @@
             const data = currentLessonData[currentIndex];
             revealStep = 0;
             document.getElementById('main-card').className = 'card';
-            
             document.getElementById('display-word').innerText = data.word;
             document.getElementById('display-example').innerText = data.example;
             document.getElementById('display-meaning').innerText = data.meaning;
-            
             document.getElementById('display-syn').innerHTML = data.syns.filter(s => s).map(s => `<span class="chip syn">${s}</span>`).join('');
             document.getElementById('display-ant').innerHTML = data.ants.filter(a => a).map(a => `<span class="chip ant">${a}</span>`).join('');
-            
             document.getElementById('progress-text').innerText = `${currentIndex + 1} of ${currentLessonData.length}`;
         }
 
         function nextWord() {
-            if (currentIndex < currentLessonData.length - 1) {
-                currentIndex++;
-                updateCard();
-            } else {
-                alert("Well done! End of lesson.");
-                goBack();
-            }
+            if (currentIndex < currentLessonData.length - 1) { currentIndex++; updateCard(); }
+            else { alert("Lesson Complete!"); goBack(); }
         }
 
-        function prevWord() {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateCard();
-            }
-        }
-
-        function goBack() {
-            document.getElementById('menu-screen').style.display = 'flex';
-            document.getElementById('app-screen').style.display = 'none';
-        }
+        function prevWord() { if (currentIndex > 0) { currentIndex--; updateCard(); } }
+        function goBack() { document.getElementById('menu-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; }
 
         init();
     </script>
