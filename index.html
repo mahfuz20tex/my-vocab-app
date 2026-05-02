@@ -16,7 +16,8 @@
         #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
         #app-screen { display: none; }
         .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
-        .lesson-btn { background: var(--card-bg); padding: 24px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 19px; }
+        .lesson-btn { background: var(--card-bg); padding: 24px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 19px; transition: transform 0.2s; }
+        .lesson-btn:active { transform: scale(0.97); }
         .card-container { flex: 1; display: flex; align-items: center; justify-content: center; }
         .card { background: var(--card-bg); width: 100%; min-height: 480px; border-radius: 40px; padding: 35px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.08); position: relative; }
         .word-text { font-size: 48px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1px; }
@@ -30,9 +31,10 @@
         .syn { background: #E3F2FD; color: #1976D2; }
         .ant { background: #FFF3E0; color: #E65100; }
         .nav-bar { display: flex; gap: 15px; padding: 25px 0 10px; }
-        .nav-btn { flex: 1; padding: 22px; border-radius: 22px; border: none; font-size: 18px; font-weight: 700; }
+        .nav-btn { flex: 1; padding: 22px; border-radius: 22px; border: none; font-size: 18px; font-weight: 700; transition: opacity 0.2s; }
         .btn-prev { background: #e5e5ea; }
         .btn-next { background: var(--primary); color: white; }
+        .nav-btn:active { opacity: 0.7; }
         .progress { text-align: center; font-size: 14px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
     </style>
 </head>
@@ -44,7 +46,7 @@
     </div>
 
     <div id="app-screen">
-        <div onclick="goBack()" style="color: var(--primary); font-weight: 700; margin-bottom: 20px; font-size: 18px;">← Lessons</div>
+        <div onclick="goBack()" style="color: var(--primary); font-weight: 700; margin-bottom: 20px; font-size: 18px; cursor: pointer;">← Lessons</div>
         <div class="card-container">
             <div id="main-card" class="card" onclick="handleCardClick()">
                 <div id="display-word" class="word-text"></div>
@@ -76,7 +78,11 @@
         async function init() {
             const listEl = document.getElementById('lesson-list');
             try {
-                const response = await fetch(MASTER_SHEET_URL + `&cb=${Date.now()}`, { cache: "no-store" });
+                // Fetch with cache-busting
+                const response = await fetch(MASTER_SHEET_URL + `&cb=${Date.now()}`, { 
+                    cache: "no-store",
+                    headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+                });
                 const csvText = await response.text();
                 parseMasterSheet(csvText);
                 renderMenu();
@@ -87,9 +93,9 @@
         }
 
         function parseMasterSheet(text) {
-            db = {}; // Reset
+            db = {}; 
             const lines = text.split(/\r?\n/);
-            const dataRows = lines.slice(1); // Skip Header
+            const dataRows = lines.slice(1); 
 
             let lessonCounter = 1;
             let currentLessonTitle = "Lesson " + lessonCounter;
@@ -111,7 +117,6 @@
 
                 const word = result[0] || "";
 
-                // If Word column is blank, start a new lesson
                 if (word === "") {
                     if (db[currentLessonTitle].length > 0) {
                         lessonCounter++;
@@ -129,8 +134,15 @@
                 }
             });
             
-            // Cleanup: Remove any empty lessons at the end
             Object.keys(db).forEach(key => { if(db[key].length === 0) delete db[key]; });
+        }
+
+        // Randomize word order
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
         }
 
         function renderMenu() {
@@ -146,7 +158,10 @@
         }
 
         function startLesson(name) {
-            currentLessonData = db[name];
+            // Clone the array so the original list stays in order for the next time
+            currentLessonData = [...db[name]];
+            shuffle(currentLessonData); // Shuffle the cards
+            
             currentIndex = 0;
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
@@ -174,7 +189,7 @@
 
         function nextWord() {
             if (currentIndex < currentLessonData.length - 1) { currentIndex++; updateCard(); }
-            else { alert("Lesson Complete!"); goBack(); }
+            else { alert("Well done! Lesson Complete."); goBack(); }
         }
 
         function prevWord() { if (currentIndex > 0) { currentIndex--; updateCard(); } }
