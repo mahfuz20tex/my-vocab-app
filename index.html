@@ -11,26 +11,58 @@
         :root { --bg: #f2f2f7; --card-bg: #ffffff; --primary: #007AFF; --text: #1c1c1e; --text-sec: #636366; }
         body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         header { padding: 60px 20px 10px; text-align: center; }
+        
         #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
         #app-screen { display: none; }
+
+        /* --- NEW BACK BUTTON BOX STYLE --- */
+        .back-btn-box {
+            display: inline-flex;
+            align-items: center;
+            background: var(--card-bg);
+            color: var(--primary);
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e5e5ea;
+            width: fit-content;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: transform 0.1s ease, opacity 0.1s ease;
+        }
+
+        .back-btn-box:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
         .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
         .lesson-btn { background: var(--card-bg); padding: 24px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 19px; }
+        
         .card-container { flex: 1; display: flex; align-items: center; justify-content: center; }
         .card { background: var(--card-bg); width: 100%; min-height: 480px; border-radius: 40px; padding: 35px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.08); position: relative; }
+        
         .word-text { font-size: 48px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1px; }
         .example-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; background: #f1f1f4; padding: 20px; border-radius: 22px; font-style: italic; color: #3a3a3c; margin: 15px 0; font-size: 20px; line-height: 1.4; }
         .details-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 20px; }
+        
         .reveal-1 .example-box { opacity: 1; transform: translateY(0); }
         .reveal-2 .example-box, .reveal-2 .details-box { opacity: 1; transform: translateY(0); }
+        
         .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 8px; }
         .meaning-text { font-size: 19px; line-height: 1.5; margin-bottom: 20px; font-weight: 500; }
         .chip { display: inline-block; padding: 7px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
         .syn { background: #E3F2FD; color: #1976D2; }
         .ant { background: #FFF3E0; color: #E65100; }
+        
         .nav-bar { display: flex; gap: 15px; padding: 25px 0 10px; }
-        .nav-btn { flex: 1; padding: 22px; border-radius: 22px; border: none; font-size: 18px; font-weight: 700; }
+        .nav-btn { flex: 1; padding: 22px; border-radius: 22px; border: none; font-size: 18px; font-weight: 700; transition: transform 0.1s ease; }
+        .nav-btn:active { transform: scale(0.96); }
         .btn-prev { background: #e5e5ea; }
         .btn-next { background: var(--primary); color: white; }
+        
         .progress { text-align: center; font-size: 14px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
     </style>
 </head>
@@ -42,7 +74,10 @@
     </div>
 
     <div id="app-screen">
-        <div onclick="goBack()" style="color: var(--primary); font-weight: 700; margin-bottom: 20px; font-size: 18px;">← Lessons</div>
+        <div class="back-btn-box" onclick="goBack()">
+            <span>← Lessons</span>
+        </div>
+
         <div class="card-container">
             <div id="main-card" class="card" onclick="handleCardClick()">
                 <div id="display-word" class="word-text"></div>
@@ -139,7 +174,6 @@
                 d.className = 'lesson-btn';
                 d.innerHTML = `<span>${name}</span><span>→</span>`;
                 d.onclick = () => {
-                    // SHUFFLE HAPPENS HERE
                     currentLessonData = shuffleArray([...db[name]]);
                     currentIndex = 0;
                     document.getElementById('menu-screen').style.display = 'none';
