@@ -9,77 +9,123 @@
 
     <style>
         :root { --bg: #f2f2f7; --card-bg: #ffffff; --primary: #007AFF; --text: #1c1c1e; --text-sec: #636366; --hot-pink: #FF1493; }
-        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
         header { padding: 60px 20px 10px; text-align: center; }
         
-        #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; position: relative; }
+        #menu-screen, #app-screen { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 15px; 
+            box-sizing: border-box; 
+            position: relative;
+            justify-content: center; /* Centers the whole group */
+        }
+
         #app-screen { display: none; }
 
-        /* --- UPDATED BACK BUTTON: FULL PINK, WHITE TEXT, LOWER POSITION --- */
+        /* --- TOP CONTROLS (Back & Watermark) --- */
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px; /* Distance to the card */
+            padding: 0 10px;
+        }
+
         .back-btn-box {
-            display: inline-flex;
-            align-items: center;
             background: var(--hot-pink); 
             color: white; 
-            padding: 12px 24px;
-            border-radius: 14px;
+            padding: 10px 20px;
+            border-radius: 12px;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             box-shadow: 0 4px 10px rgba(255, 20, 147, 0.3);
             border: none;
-            width: fit-content;
-            margin-top: 35px; /* Lower position */
-            margin-bottom: 10px;
             cursor: pointer;
-            transition: transform 0.1s ease, opacity 0.1s ease;
-            z-index: 10;
+            transition: transform 0.1s ease;
         }
 
-        .back-btn-box:active {
-            transform: scale(0.95);
-            opacity: 0.9;
-        }
+        .back-btn-box:active { transform: scale(0.95); }
 
-        /* --- WATERMARK STYLE --- */
         .watermark {
-            position: absolute;
-            top: 40px; /* Aligned with the lowered button */
-            right: 20px;
             text-align: right;
-            font-size: 13px;
-            color: rgba(0, 0, 0, 0.15); /* Soft watercolor effect */
-            pointer-events: none; /* User can't accidentally click it */
-            line-height: 1.4;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.2); 
+            line-height: 1.3;
             font-weight: 700;
-            z-index: 5;
         }
 
-        .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
-        .lesson-btn { background: var(--card-bg); padding: 24px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 19px; }
+        /* --- FLASHCARD --- */
+        .card-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            width: 100%; 
+            min-height: 440px; /* Slightly shorter for mobile tightness */
+            border-radius: 35px; 
+            padding: 25px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            text-align: center; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); 
+        }
         
-        .card-container { flex: 1; display: flex; align-items: center; justify-content: center; }
-        .card { background: var(--card-bg); width: 100%; min-height: 480px; border-radius: 40px; padding: 35px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.08); position: relative; }
-        
-        .word-text { font-size: 48px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1px; }
-        .example-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; background: #f1f1f4; padding: 20px; border-radius: 22px; font-style: italic; color: #3a3a3c; margin: 15px 0; font-size: 20px; line-height: 1.4; }
-        .details-box { opacity: 0; transform: translateY(10px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 20px; }
+        .word-text { font-size: 42px; font-weight: 800; margin-bottom: 20px; letter-spacing: -1px; }
+        .example-box { opacity: 0; transform: translateY(5px); transition: 0.4s ease; background: #f1f1f4; padding: 15px; border-radius: 18px; font-style: italic; color: #3a3a3c; margin: 10px 0; font-size: 18px; line-height: 1.4; }
+        .details-box { opacity: 0; transform: translateY(5px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 15px; }
         
         .reveal-1 .example-box { opacity: 1; transform: translateY(0); }
         .reveal-2 .example-box, .reveal-2 .details-box { opacity: 1; transform: translateY(0); }
         
-        .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 8px; }
-        .meaning-text { font-size: 19px; line-height: 1.5; margin-bottom: 20px; font-weight: 500; }
-        .chip { display: inline-block; padding: 7px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-right: 6px; margin-bottom: 6px; }
+        .label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--primary); margin-bottom: 5px; }
+        .meaning-text { font-size: 17px; line-height: 1.4; margin-bottom: 15px; font-weight: 500; }
+        .chip { display: inline-block; padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-right: 5px; margin-bottom: 5px; }
         .syn { background: #E3F2FD; color: #1976D2; }
         .ant { background: #FFF3E0; color: #E65100; }
         
-        .nav-bar { display: flex; gap: 15px; padding: 25px 0 10px; }
-        .nav-btn { flex: 1; padding: 22px; border-radius: 22px; border: none; font-size: 18px; font-weight: 700; transition: transform 0.1s ease; }
+        /* --- BOTTOM NAVIGATION --- */
+        .nav-bar { 
+            display: flex; 
+            gap: 12px; 
+            padding: 15px 5px 0; /* Tightened top padding */
+        }
+
+        .nav-btn { 
+            flex: 1; 
+            padding: 18px; 
+            border-radius: 18px; 
+            border: none; 
+            font-size: 17px; 
+            font-weight: 700; 
+            transition: transform 0.1s ease; 
+        }
         .nav-btn:active { transform: scale(0.96); }
         .btn-prev { background: #e5e5ea; }
         .btn-next { background: var(--primary); color: white; }
         
-        .progress { text-align: center; font-size: 14px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
+        .progress { text-align: center; font-size: 13px; color: var(--text-sec); margin-top: 8px; font-weight: 600; }
+        .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
+        .lesson-btn { background: var(--card-bg); padding: 22px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -90,13 +136,14 @@
     </div>
 
     <div id="app-screen">
-        <div class="watermark">
-            Mahfuz Ahmed<br>
-            +8801770852182
-        </div>
-
-        <div class="back-btn-box" onclick="goBack()">
-            <span>← Lessons</span>
+        <div class="top-controls">
+            <div class="back-btn-box" onclick="goBack()">
+                <span>← Lessons</span>
+            </div>
+            <div class="watermark">
+                Mahfuz Ahmed<br>
+                +8801770852182
+            </div>
         </div>
 
         <div class="card-container">
@@ -107,10 +154,11 @@
                     <div class="label">Meaning</div>
                     <div id="display-meaning" class="meaning-text"></div>
                     <div class="label">Synonyms</div><div id="display-syn"></div>
-                    <div class="label" style="margin-top:10px;">Antonyms</div><div id="display-ant"></div>
+                    <div class="label" style="margin-top:8px;">Antonyms</div><div id="display-ant"></div>
                 </div>
             </div>
         </div>
+
         <div class="nav-bar">
             <button class="nav-btn btn-prev" onclick="prevWord()">Back</button>
             <button class="nav-btn btn-next" onclick="nextWord()">Next Word</button>
@@ -144,7 +192,6 @@
             db = {}; 
             const lines = text.split(/\r?\n/);
             const dataRows = lines.slice(1); 
-
             let lessonCounter = 1;
             let currentLessonTitle = "Lesson " + lessonCounter;
             db[currentLessonTitle] = [];
@@ -162,7 +209,6 @@
                 }
                 result.push(cell.trim());
                 const word = result[0] || "";
-
                 if (word === "") {
                     if (db[currentLessonTitle].length > 0) {
                         lessonCounter++;
