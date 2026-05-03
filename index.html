@@ -8,34 +8,50 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        :root { --bg: #f2f2f7; --card-bg: #ffffff; --primary: #007AFF; --text: #1c1c1e; --text-sec: #636366; }
+        :root { --bg: #f2f2f7; --card-bg: #ffffff; --primary: #007AFF; --text: #1c1c1e; --text-sec: #636366; --hot-pink: #FF1493; }
         body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         header { padding: 60px 20px 10px; text-align: center; }
         
-        #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        #menu-screen, #app-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; position: relative; }
         #app-screen { display: none; }
 
-        /* --- UPDATED BABY PINK BACK BUTTON --- */
+        /* --- UPDATED BACK BUTTON: FULL PINK, WHITE TEXT, LOWER POSITION --- */
         .back-btn-box {
             display: inline-flex;
             align-items: center;
-            background: #FFD1DC; /* Baby Pink */
-            color: #333; /* Darker text for readability */
-            padding: 12px 20px;
+            background: var(--hot-pink); 
+            color: white; 
+            padding: 12px 24px;
             border-radius: 14px;
             font-weight: 700;
             font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border: 1px solid #ffb6c1; /* Soft pink border */
+            box-shadow: 0 4px 10px rgba(255, 20, 147, 0.3);
+            border: none;
             width: fit-content;
-            margin-bottom: 20px;
+            margin-top: 35px; /* Lower position */
+            margin-bottom: 10px;
             cursor: pointer;
             transition: transform 0.1s ease, opacity 0.1s ease;
+            z-index: 10;
         }
 
         .back-btn-box:active {
             transform: scale(0.95);
-            opacity: 0.8;
+            opacity: 0.9;
+        }
+
+        /* --- WATERMARK STYLE --- */
+        .watermark {
+            position: absolute;
+            top: 40px; /* Aligned with the lowered button */
+            right: 20px;
+            text-align: right;
+            font-size: 13px;
+            color: rgba(0, 0, 0, 0.15); /* Soft watercolor effect */
+            pointer-events: none; /* User can't accidentally click it */
+            line-height: 1.4;
+            font-weight: 700;
+            z-index: 5;
         }
 
         .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
@@ -74,6 +90,11 @@
     </div>
 
     <div id="app-screen">
+        <div class="watermark">
+            Mahfuz Ahmed<br>
+            +8801770852182
+        </div>
+
         <div class="back-btn-box" onclick="goBack()">
             <span>← Lessons</span>
         </div>
