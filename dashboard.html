@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Factory Dash</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Factory Dash">
+
+    <style>
+        :root { 
+            --bg: #f2f2f7; 
+            --card-bg: #ffffff; 
+            --primary: #1c1c1e; 
+            --accent: #007AFF;
+            --text-sec: #8e8e93; 
+            --border: #e5e5ea;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--primary); 
+            margin: 0; 
+            padding: 0;
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+        }
+
+        header { 
+            padding: 50px 20px 15px; 
+            background: white; 
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+        header p { margin: 2px 0 0; font-size: 13px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        #main-menu, #detail-screen { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            box-sizing: border-box; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #detail-screen { display: none; }
+
+        /* KPI SECTION */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-label { font-size: 11px; font-weight: 600; color: var(--text-sec); margin-bottom: 8px; line-height: 1.2; }
+        .kpi-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+        .kpi-card.wide { grid-column: span 2; border-left: 4px solid var(--accent); }
+
+        /* BUTTONS */
+        .nav-card {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 17px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid transparent;
+        }
+        .nav-card:active { background: #fafafa; transform: scale(0.98); }
+        .nav-card span.icon { font-size: 22px; margin-right: 12px; }
+
+        /* TABLES */
+        .table-holder { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f9f9fb; padding: 12px; text-align: left; color: var(--text-sec); font-size: 11px; text-transform: uppercase; }
+        td { padding: 14px 12px; border-top: 1px solid #f2f2f7; }
+        .qty-cell { font-weight: 700; color: var(--accent); }
+
+        .back-btn { 
+            background: #e5e5ea; border: none; padding: 10px 20px; 
+            border-radius: 12px; font-weight: 600; font-size: 15px; margin-bottom: 15px;
+        }
+
+        .sync-btn {
+            text-align: center; margin: 20px 0; color: var(--accent); font-weight: 600; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <p>Production Summary</p>
+        <h1>Spare Parts</h1>
+    </header>
+
+    <div id="main-menu">
+        <div class="kpi-container" id="kpi-view">
+            <div class="kpi-card"><div class="kpi-value">...</div></div>
+            <div class="kpi-card"><div class="kpi-value">...</div></div>
+        </div>
+
+        <div class="nav-card" onclick="openSection('breakdown')">
+            <span><span class="icon">📊</span> Machine Breakdown</span>
+            <span style="color:#c7c7cc">→</span>
+        </div>
+
+        <div class="nav-card" onclick="openSection('activity')">
+            <span><span class="icon">⏱️</span> Recent Activity</span>
+            <span style="color:#c7c7cc">→</span>
+        </div>
+
+        <div class="sync-btn" onclick="loadData()">↻ Refresh Sheet Data</div>
+    </div>
+
+    <div id="detail-screen">
+        <button class="back-btn" onclick="closeSection()">← Back</button>
+        <h2 id="section-title" style="margin: 0 0 15px 5px;">Section</h2>
+        <div id="section-content" class="table-holder"></div>
+    </div>
+
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkunnFJVyScmozzculTSPqKACNQKua3ujKWaSmR8DfSwqttC6doiiMb7XI7d0thOwXDe_f-BvDPT5H/pub?output=csv";
+        let sheetData = [];
+
+        async function loadData() {
+            try {
+                const resp = await fetch(CSV_URL + `&cachebust=${Date.now()}`);
+                const text = await resp.text();
+                sheetData = text.split('\n').map(row => 
+                    row.split(',').map(cell => cell.replace(/"/g, '').trim())
+                );
+                renderKPIs();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderKPIs() {
+            const kpiRow = sheetData[6]; // Row 7 in Sheet
+            if(!kpiRow) return;
+
+            document.getElementById('kpi-view').innerHTML = `
+                <div class="kpi-card"><div class="kpi-label">TOTAL RECEIVED</div><div class="kpi-value">${kpiRow[1]}</div></div>
+                <div class="kpi-card"><div class="kpi-label">TOTAL ISSUED</div><div class="kpi-value">${kpiRow[5]}</div></div>
+                <div class="kpi-card wide"><div class="kpi-label">NET STOCK BALANCE</div><div class="kpi-value">${kpiRow[10]} Units</div></div>
+                <div class="kpi-card"><div class="kpi-label">RETURNED/BROKEN</div><div class="kpi-value" style="color:#ff3b30">${kpiRow[8]}</div></div>
+                <div class="kpi-card"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value">৳${kpiRow[3]}</div></div>
+            `;
+        }
+
+        function openSection(type) {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('detail-screen').style.display = 'block';
+            const container = document.getElementById('section-content');
+            const title = document.getElementById('section-title');
+
+            if(type === 'breakdown') {
+                title.innerText = "Machine Breakdown";
+                let html = `<table><tr><th>Section</th><th>Issued</th><th>%</th></tr>`;
+                // Mapping Rows 12-17, Columns B, C, D
+                for(let i=11; i<=16; i++) {
+                    if(sheetData[i]) {
+                        html += `<tr><td>${sheetData[i][1]}</td><td class="qty-cell">${sheetData[i][2]}</td><td>${sheetData[i][3]}</td></tr>`;
+                    }
+                }
+                container.innerHTML = html + `</table>`;
+            } else {
+                title.innerText = "Recent Activity";
+                let html = `<table><tr><th>Part</th><th>M/C</th><th>Qty</th><th>To</th></tr>`;
+                // Mapping Rows 12-17, Columns G, H, I, J
+                for(let i=11; i<=16; i++) {
+                    if(sheetData[i]) {
+                        html += `<tr><td>${sheetData[i][7]}</td><td>${sheetData[i][8]}</td><td class="qty-cell">${sheetData[i][9]}</td><td>${sheetData[i][10]}</td></tr>`;
+                    }
+                }
+                container.innerHTML = html + `</table>`;
+            }
+        }
+
+        function closeSection() {
+            document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('detail-screen').style.display = 'none';
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
