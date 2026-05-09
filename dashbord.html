@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Parts Dashboard</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root { 
+            --bg: #f2f2f7; 
+            --card-bg: #ffffff; 
+            --primary: #2c3e50; 
+            --accent: #3498db;
+            --text: #1c1c1e; 
+            --text-sec: #636366; 
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+        
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        header { padding: 50px 20px 10px; text-align: center; background: white; border-bottom: 1px solid #ddd; }
+        header h1 { margin: 0; font-size: 20px; color: var(--primary); }
+        header p { margin: 5px 0 0; font-size: 12px; color: var(--text-sec); }
+
+        #main-menu, #detail-screen { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            box-sizing: border-box; 
+        }
+
+        #detail-screen { display: none; background: var(--bg); }
+
+        /* KPI GRID */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .kpi-label { font-size: 10px; font-weight: 700; color: var(--text-sec); text-transform: uppercase; margin-bottom: 5px; }
+        .kpi-value { font-size: 20px; font-weight: 800; color: var(--primary); }
+        .kpi-card.highlight { border-left: 4px solid var(--accent); }
+
+        /* MENU SECTIONS */
+        .menu-section {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .menu-section span:first-child { display: flex; align-items: center; gap: 10px; }
+        .icon { font-size: 20px; }
+
+        /* TABLES */
+        .table-container { background: white; border-radius: 16px; overflow: hidden; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f8f9fa; padding: 12px 8px; text-align: left; color: var(--text-sec); border-bottom: 1px solid #eee; }
+        td { padding: 12px 8px; border-bottom: 1px solid #f9f9f9; }
+
+        /* CONTROLS */
+        .back-bar { margin-bottom: 15px; }
+        .back-btn { background: #e5e5ea; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; }
+        .sync-info { text-align: center; padding: 15px; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Factory Inventory</h1>
+        <p>Spare Parts Management Dashboard</p>
+    </header>
+
+    <div id="main-menu">
+        <div class="kpi-grid" id="kpi-display">
+            <div class="kpi-card"><div class="kpi-value">...</div></div>
+            <div class="kpi-card"><div class="kpi-value">...</div></div>
+        </div>
+
+        <div class="menu-section" onclick="showDetail('breakdown')">
+            <span><span class="icon">📊</span> Machine Breakdown</span>
+            <span>→</span>
+        </div>
+        <div class="menu-section" onclick="showDetail('activity')">
+            <span><span class="icon">📝</span> Recent Activity</span>
+            <span>→</span>
+        </div>
+        
+        <div class="sync-info" onclick="fetchData()">↻ Refresh Data</div>
+    </div>
+
+    <div id="detail-screen">
+        <div class="back-bar">
+            <button class="back-btn" onclick="goHome()">← Back</button>
+        </div>
+        <h2 id="detail-title" style="margin-left: 5px;">Section</h2>
+        <div id="detail-content" class="table-container"></div>
+    </div>
+
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkunnFJVyScmozzculTSPqKACNQKua3ujKWaSmR8DfSwqttC6doiiMb7XI7d0thOwXDe_f-BvDPT5H/pub?output=csv";
+
+        let rawData = [];
+
+        async function fetchData() {
+            try {
+                const response = await fetch(CSV_URL + `&cb=${Date.now()}`);
+                const text = await response.text();
+                // Basic CSV Parser
+                rawData = text.split('\n').map(row => row.split(',').map(cell => cell.replace(/"/g, '').trim()));
+                renderDashboard();
+            } catch (e) {
+                alert("Error loading data. Check internet connection.");
+            }
+        }
+
+        function renderDashboard() {
+            // Based on your screenshot, KPIs are in specific cells
+            // Adjusting based on standard "Publish to Web" CSV structure
+            const kpiBox = document.getElementById('kpi-display');
+            
+            // Note: Since Google Sheets publishes the WHOLE sheet as CSV, 
+            // we have to target the row/column where the data lives.
+            // Based on your sheet screenshot:
+            const kpiRow = rawData[6]; // Row 7 in Excel is Index 6
+            
+            if(kpiRow) {
+                kpiBox.innerHTML = `
+                    <div class="kpi-card"><div class="kpi-label">Received Qty</div><div class="kpi-value">${kpiRow[1] || '0'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Received ৳</div><div class="kpi-value">${kpiRow[3] || '0'}</div></div>
+                    <div class="kpi-card highlight"><div class="kpi-label">Stock Balance</div><div class="kpi-value">${kpiRow[10] || '0'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Issued Qty</div><div class="kpi-value">${kpiRow[5] || '0'}</div></div>
+                `;
+            }
+        }
+
+        function showDetail(type) {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('detail-screen').style.display = 'block';
+            const content = document.getElementById('detail-content');
+            const title = document.getElementById('detail-title');
+
+            if(type === 'breakdown') {
+                title.innerText = "Breakdown by Machine";
+                // Pulling data from rows 12 to 17 (approx based on screenshot)
+                let html = `<table><tr><th>Section</th><th>Qty</th><th>%</th></tr>`;
+                for(let i=11; i<=16; i++) {
+                    if(rawData[i]) {
+                        html += `<tr><td>${rawData[i][1]}</td><td>${rawData[i][2]}</td><td>${rawData[i][3]}</td></tr>`;
+                    }
+                }
+                html += `</table>`;
+                content.innerHTML = html;
+            } else {
+                title.innerText = "Recent Activity";
+                let html = `<table><tr><th>Date</th><th>Part</th><th>M/C</th><th>Qty</th></tr>`;
+                // Pulling activity from rows 12 to 17, right side columns
+                for(let i=11; i<=16; i++) {
+                    if(rawData[i]) {
+                        html += `<tr><td>${rawData[i][6]}</td><td>${rawData[i][7]}</td><td>${rawData[i][8]}</td><td>${rawData[i][9]}</td></tr>`;
+                    }
+                }
+                html += `</table>`;
+                content.innerHTML = html;
+            }
+        }
+
+        function goHome() {
+            document.getElementById('main-menu').style.display = 'block';
+            document.getElementById('detail-screen').style.display = 'none';
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
