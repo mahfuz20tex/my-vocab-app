@@ -6,63 +6,85 @@
     <title>Vocab Journey</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f2f2f7">
 
     <style>
-        :root { --bg: #f2f2f7; --card-bg: #ffffff; --primary: #007AFF; --text: #1c1c1e; --text-sec: #636366; --hot-pink: #FF1493; }
-        
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            min-height: 100vh; /* Changed from height: 100vh to allow growth */
-            -webkit-tap-highlight-color: transparent; 
+        :root {
+            --bg: #f2f2f7; --card-bg: #ffffff; --primary: #007AFF; --text: #1c1c1e;
+            --text-sec: #636366; --hot-pink: #FF1493;
+            /* Safe areas: fall back to sane padding when not in standalone mode */
+            --safe-top: max(env(safe-area-inset-top, 0px), 20px);
+            --safe-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
         }
 
-        header { padding: 60px 20px 10px; text-align: center; }
-        
-        #menu-screen, #app-screen { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            padding: 15px; 
-            box-sizing: border-box; 
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh; /* dynamic viewport: correct in standalone mode */
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none; /* stops the rubber-band pull exposing the grey behind */
+        }
+
+        header {
+            /* Status bar clearance + breathing room */
+            padding: calc(var(--safe-top) + 24px) 20px 10px;
+            text-align: center;
+        }
+
+        #menu-screen, #app-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px calc(15px + var(--safe-right)) calc(15px + var(--safe-bottom)) calc(15px + var(--safe-left));
+            box-sizing: border-box;
             position: relative;
-            justify-content: flex-start; /* Changed from center so long lists stack and scroll naturally downwards */
+            justify-content: flex-start;
         }
 
-        #app-screen { display: none; }
+        #app-screen {
+            display: none;
+            /* Push the whole study screen below the notch / status bar */
+            padding-top: calc(var(--safe-top) + 12px);
+        }
 
         /* --- TOP CONTROLS (Back & Watermark) --- */
         .top-controls {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-bottom: 10px; /* Distance to the card */
+            margin-bottom: 12px;
             padding: 0 10px;
         }
 
         .back-btn-box {
-            background: var(--hot-pink); 
-            color: white; 
-            padding: 10px 20px;
+            background: var(--hot-pink);
+            color: white;
+            padding: 12px 20px; /* slightly taller = easier thumb target */
             border-radius: 12px;
             font-weight: 700;
             font-size: 15px;
             box-shadow: 0 4px 10px rgba(255, 20, 147, 0.3);
             border: none;
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
         }
 
-        .back-btn-box:active { transform: scale(0.95); }
+        .back-btn-box:active {
+            transform: scale(0.92);
+            box-shadow: 0 2px 5px rgba(255, 20, 147, 0.25);
+        }
 
         .watermark {
             text-align: right;
             font-size: 12px;
-            color: rgba(0, 0, 0, 0.2); 
+            color: rgba(0, 0, 0, 0.2);
             line-height: 1.3;
             font-weight: 700;
         }
@@ -75,56 +97,101 @@
             align-items: center;
         }
 
-        .card { 
-            background: var(--card-bg); 
-            width: 100%; 
-            min-height: 440px; /* Slightly shorter for mobile tightness */
-            border-radius: 35px; 
-            padding: 25px; 
-            box-sizing: border-box; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            text-align: center; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.08); 
+        .card {
+            background: var(--card-bg);
+            width: 100%;
+            min-height: 440px;
+            border-radius: 35px;
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
         }
-        
+
+        /* Card entrance animations (next = slide from right, prev = from left) */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(45px) scale(0.97); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-45px) scale(0.97); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .card.anim-next { animation: slideInRight 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+        .card.anim-prev { animation: slideInLeft  0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+
+        /* Tap-to-reveal pulse */
+        @keyframes cardTap {
+            0%   { transform: scale(1); }
+            45%  { transform: scale(0.985); }
+            100% { transform: scale(1); }
+        }
+        .card.tap-pulse { animation: cardTap 0.18s ease; }
+
         .word-text { font-size: 42px; font-weight: 800; margin-bottom: 20px; letter-spacing: -1px; }
         .example-box { opacity: 0; transform: translateY(5px); transition: 0.4s ease; background: #f1f1f4; padding: 15px; border-radius: 18px; font-style: italic; color: #3a3a3c; margin: 10px 0; font-size: 18px; line-height: 1.4; }
         .details-box { opacity: 0; transform: translateY(5px); transition: 0.4s ease; text-align: left; border-top: 1px solid #eee; padding-top: 15px; }
-        
+
         .reveal-1 .example-box { opacity: 1; transform: translateY(0); }
         .reveal-2 .example-box, .reveal-2 .details-box { opacity: 1; transform: translateY(0); }
-        
+
         .label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--primary); margin-bottom: 5px; }
         .meaning-text { font-size: 17px; line-height: 1.4; margin-bottom: 15px; font-weight: 500; }
         .chip { display: inline-block; padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-right: 5px; margin-bottom: 5px; }
         .syn { background: #E3F2FD; color: #1976D2; }
         .ant { background: #FFF3E0; color: #E65100; }
-        
+
         /* --- BOTTOM NAVIGATION --- */
-        .nav-bar { 
-            display: flex; 
-            gap: 12px; 
-            padding: 15px 5px 0; /* Tightened top padding */
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            padding: 15px 5px 0;
         }
 
-        .nav-btn { 
-            flex: 1; 
-            padding: 18px; 
-            border-radius: 18px; 
-            border: none; 
-            font-size: 17px; 
-            font-weight: 700; 
-            transition: transform 0.1s ease; 
+        .nav-btn {
+            flex: 1;
+            padding: 18px;
+            border-radius: 18px;
+            border: none;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s ease, filter 0.12s ease;
         }
-        .nav-btn:active { transform: scale(0.96); }
+        .nav-btn:active { transform: scale(0.94); filter: brightness(0.92); }
+
+        /* Press "bounce-back" applied via JS so it also fires on quick taps */
+        @keyframes btnBounce {
+            0%   { transform: scale(1); }
+            35%  { transform: scale(0.92); }
+            70%  { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .nav-btn.bounce, .back-btn-box.bounce { animation: btnBounce 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
         .btn-prev { background: #e5e5ea; }
-        .btn-next { background: var(--primary); color: white; }
-        
+        .btn-next { background: var(--primary); color: white; box-shadow: 0 6px 14px rgba(0,122,255,0.3); }
+
         .progress { text-align: center; font-size: 13px; color: var(--text-sec); margin-top: 8px; font-weight: 600; }
         .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
-        .lesson-btn { background: var(--card-bg); padding: 22px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 18px; }
+
+        .lesson-btn {
+            background: var(--card-bg); padding: 22px; border-radius: 18px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-weight: 700; font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        .lesson-btn:active { transform: scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+
+        /* Respect users with motion sensitivity */
+        @media (prefers-reduced-motion: reduce) {
+            .card.anim-next, .card.anim-prev, .card.tap-pulse,
+            .nav-btn.bounce, .back-btn-box.bounce { animation: none; }
+        }
     </style>
 </head>
 <body>
@@ -136,7 +203,7 @@
 
     <div id="app-screen">
         <div class="top-controls">
-            <div class="back-btn-box" onclick="goBack()">
+            <div class="back-btn-box" id="back-btn" onclick="goBack(event)">
                 <span>← Lessons</span>
             </div>
             <div class="watermark">
@@ -159,8 +226,8 @@
         </div>
 
         <div class="nav-bar">
-            <button class="nav-btn btn-prev" onclick="prevWord()">Back</button>
-            <button class="nav-btn btn-next" onclick="nextWord()">Next Word</button>
+            <button class="nav-btn btn-prev" onclick="prevWord(event)">Back</button>
+            <button class="nav-btn btn-next" onclick="nextWord(event)">Next Word</button>
         </div>
         <div id="progress-text" class="progress"></div>
     </div>
@@ -173,6 +240,112 @@
         let currentIndex = 0;
         let revealStep = 0;
 
+        /* ============================================================
+           SOUND ENGINE — synthesized "KRING" bell (no audio file needed)
+           ============================================================ */
+        let audioCtx = null;
+
+        function ensureAudio() {
+            if (!audioCtx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) audioCtx = new AC();
+            }
+            // iOS suspends the context until a user gesture — resume it
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // Bright bell "kring!" — two detuned strikes with a fast shimmer
+        function playKring() {
+            ensureAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            const master = audioCtx.createGain();
+            master.gain.setValueAtTime(0.28, now);
+            master.connect(audioCtx.destination);
+
+            // Bell partials: fundamental + bright overtones (E6-ish bell)
+            const partials = [
+                { freq: 1318.5, gain: 1.0,  decay: 0.45 },
+                { freq: 1975.5, gain: 0.55, decay: 0.32 },
+                { freq: 2637.0, gain: 0.35, decay: 0.22 },
+                { freq: 3520.0, gain: 0.18, decay: 0.15 }
+            ];
+
+            partials.forEach(p => {
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(p.freq, now);
+                // Tiny downward pitch settle = realistic bell strike
+                osc.frequency.exponentialRampToValueAtTime(p.freq * 0.995, now + p.decay);
+                g.gain.setValueAtTime(p.gain, now);
+                g.gain.exponentialRampToValueAtTime(0.001, now + p.decay);
+                osc.connect(g); g.connect(master);
+                osc.start(now);
+                osc.stop(now + p.decay + 0.05);
+            });
+
+            // Second softer strike 90ms later → the "kr-RING" double-hit feel
+            const t2 = now + 0.09;
+            const osc2 = audioCtx.createOscillator();
+            const g2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1567.98, t2); // G6
+            g2.gain.setValueAtTime(0.5, t2);
+            g2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.5);
+            osc2.connect(g2); g2.connect(master);
+            osc2.start(t2);
+            osc2.stop(t2 + 0.55);
+        }
+
+        // Soft subtle "tick" for back/secondary presses
+        function playTick() {
+            ensureAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(880, now);
+            g.gain.setValueAtTime(0.12, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+
+        /* ============================================================
+           HAPTICS — works on Android Chrome; iOS Safari has no API
+           ============================================================ */
+        function vibrate(pattern) {
+            if (navigator.vibrate) navigator.vibrate(pattern);
+        }
+
+        // Unlock audio on the very first touch anywhere (iOS requirement)
+        document.addEventListener('touchstart', ensureAudio, { once: true });
+        document.addEventListener('click', ensureAudio, { once: true });
+
+        /* ============================================================
+           UI helpers
+           ============================================================ */
+        function bounce(el) {
+            if (!el) return;
+            el.classList.remove('bounce');
+            void el.offsetWidth; // restart animation
+            el.classList.add('bounce');
+        }
+
+        function animateCard(direction) {
+            const card = document.getElementById('main-card');
+            card.classList.remove('anim-next', 'anim-prev');
+            void card.offsetWidth;
+            card.classList.add(direction === 'prev' ? 'anim-prev' : 'anim-next');
+        }
+
+        /* ============================================================
+           APP LOGIC
+           ============================================================ */
         async function init() {
             const listEl = document.getElementById('lesson-list');
             listEl.innerHTML = '<p style="text-align:center">Syncing Master List...</p>';
@@ -188,9 +361,9 @@
         }
 
         function parseMasterSheet(text) {
-            db = {}; 
+            db = {};
             const lines = text.split(/\r?\n/);
-            const dataRows = lines.slice(1); 
+            const dataRows = lines.slice(1);
             let lessonCounter = 1;
             let currentLessonTitle = "Lesson " + lessonCounter;
             db[currentLessonTitle] = [];
@@ -240,12 +413,15 @@
                 d.className = 'lesson-btn';
                 d.innerHTML = `<span>${name}</span><span>→</span>`;
                 d.onclick = () => {
+                    vibrate(15);
+                    playTick();
                     currentLessonData = shuffleArray([...db[name]]);
                     currentIndex = 0;
                     document.getElementById('menu-screen').style.display = 'none';
                     document.getElementById('app-screen').style.display = 'flex';
-                    window.scrollTo(0, 0); // Resets scroll position when opening a lesson
+                    window.scrollTo(0, 0);
                     updateCard();
+                    animateCard('next');
                 };
                 list.appendChild(d);
             });
@@ -254,7 +430,10 @@
         function handleCardClick() {
             if (revealStep < 2) {
                 revealStep++;
-                document.getElementById('main-card').className = `card reveal-${revealStep}`;
+                vibrate(10); // tiny haptic on reveal
+                const card = document.getElementById('main-card');
+                card.className = `card reveal-${revealStep} tap-pulse`;
+                setTimeout(() => card.classList.remove('tap-pulse'), 200);
             }
         }
 
@@ -270,16 +449,38 @@
             document.getElementById('progress-text').innerText = `${currentIndex + 1} of ${currentLessonData.length}`;
         }
 
-        function nextWord() {
-            if (currentIndex < currentLessonData.length - 1) { currentIndex++; updateCard(); }
-            else { alert("Lesson Complete!"); goBack(); }
+        function nextWord(e) {
+            if (e) bounce(e.currentTarget);
+            vibrate([18, 40, 12]);   // little double-buzz (Android)
+            playKring();             // the bell!
+            if (currentIndex < currentLessonData.length - 1) {
+                currentIndex++;
+                updateCard();
+                animateCard('next');
+            } else {
+                vibrate([30, 60, 30, 60, 60]);
+                setTimeout(() => { alert("Lesson Complete!"); goBack(); }, 250);
+            }
         }
 
-        function prevWord() { if (currentIndex > 0) { currentIndex--; updateCard(); } }
-        function goBack() { 
-            document.getElementById('menu-screen').style.display = 'flex'; 
-            document.getElementById('app-screen').style.display = 'none'; 
-            window.scrollTo(0, 0); // Resets scroll position when returning to menu
+        function prevWord(e) {
+            if (e) bounce(e.currentTarget);
+            if (currentIndex > 0) {
+                vibrate(12);
+                playTick();
+                currentIndex--;
+                updateCard();
+                animateCard('prev');
+            }
+        }
+
+        function goBack(e) {
+            if (e && e.currentTarget) bounce(e.currentTarget);
+            vibrate(12);
+            playTick();
+            document.getElementById('menu-screen').style.display = 'flex';
+            document.getElementById('app-screen').style.display = 'none';
+            window.scrollTo(0, 0);
         }
 
         init();
