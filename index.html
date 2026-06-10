@@ -52,6 +52,8 @@
             display: none;
             /* Push the whole study screen below the notch / status bar */
             padding-top: calc(var(--safe-top) + 12px);
+            /* Reserve room for the pinned bottom bar so the card never hides under it */
+            padding-bottom: calc(var(--safe-bottom) + 130px);
         }
 
         /* --- TOP CONTROLS (Back & Watermark) --- */
@@ -144,11 +146,22 @@
         .syn { background: #E3F2FD; color: #1976D2; }
         .ant { background: #FFF3E0; color: #E65100; }
 
-        /* --- BOTTOM NAVIGATION --- */
+        /* --- BOTTOM NAVIGATION (pinned, like the Lessons button up top) --- */
+        .bottom-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 12px calc(20px + var(--safe-right)) calc(var(--safe-bottom) + 6px) calc(20px + var(--safe-left));
+            box-sizing: border-box;
+            /* Soft fade so the card edge doesn't clash if content runs long */
+            background: linear-gradient(to top, var(--bg) 75%, rgba(242,242,247,0));
+            z-index: 10;
+        }
+
         .nav-bar {
             display: flex;
             gap: 12px;
-            padding: 15px 5px 0;
         }
 
         .nav-btn {
@@ -175,7 +188,7 @@
         .btn-prev { background: #e5e5ea; }
         .btn-next { background: var(--primary); color: white; box-shadow: 0 6px 14px rgba(0,122,255,0.3); }
 
-        .progress { text-align: center; font-size: 13px; color: var(--text-sec); margin-top: 8px; font-weight: 600; }
+        .progress { text-align: center; font-size: 13px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
         .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
 
         .lesson-btn {
@@ -225,11 +238,13 @@
             </div>
         </div>
 
-        <div class="nav-bar">
-            <button class="nav-btn btn-prev" onclick="prevWord(event)">Back</button>
-            <button class="nav-btn btn-next" onclick="nextWord(event)">Next Word</button>
+        <div class="bottom-bar">
+            <div class="nav-bar">
+                <button class="nav-btn btn-prev" onclick="prevWord(event)">Back</button>
+                <button class="nav-btn btn-next" onclick="nextWord(event)">Next Word</button>
+            </div>
+            <div id="progress-text" class="progress"></div>
         </div>
-        <div id="progress-text" class="progress"></div>
     </div>
 
     <script>
