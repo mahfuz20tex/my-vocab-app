@@ -17,11 +17,12 @@
             margin: 0; 
             display: flex; 
             flex-direction: column; 
-            min-height: 100vh; /* Changed from height: 100vh */
-            /* overflow: hidden; <-- REMOVE or comment out this line entirely */
+            min-height: 100vh; /* Changed from height: 100vh to allow growth */
             -webkit-tap-highlight-color: transparent; 
         }
 
+        header { padding: 60px 20px 10px; text-align: center; }
+        
         #menu-screen, #app-screen { 
             flex: 1; 
             display: flex; 
@@ -29,7 +30,7 @@
             padding: 15px; 
             box-sizing: border-box; 
             position: relative;
-            justify-content: flex-start; /* Changed from center so long lists scroll properly */
+            justify-content: flex-start; /* Changed from center so long lists stack and scroll naturally downwards */
         }
 
         #app-screen { display: none; }
@@ -243,6 +244,7 @@
                     currentIndex = 0;
                     document.getElementById('menu-screen').style.display = 'none';
                     document.getElementById('app-screen').style.display = 'flex';
+                    window.scrollTo(0, 0); // Resets scroll position when opening a lesson
                     updateCard();
                 };
                 list.appendChild(d);
@@ -274,7 +276,11 @@
         }
 
         function prevWord() { if (currentIndex > 0) { currentIndex--; updateCard(); } }
-        function goBack() { document.getElementById('menu-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; }
+        function goBack() { 
+            document.getElementById('menu-screen').style.display = 'flex'; 
+            document.getElementById('app-screen').style.display = 'none'; 
+            window.scrollTo(0, 0); // Resets scroll position when returning to menu
+        }
 
         init();
     </script>
