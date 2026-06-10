@@ -17,13 +17,11 @@
             margin: 0; 
             display: flex; 
             flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden; 
+            min-height: 100vh; /* Changed from height: 100vh */
+            /* overflow: hidden; <-- REMOVE or comment out this line entirely */
             -webkit-tap-highlight-color: transparent; 
         }
 
-        header { padding: 60px 20px 10px; text-align: center; }
-        
         #menu-screen, #app-screen { 
             flex: 1; 
             display: flex; 
@@ -31,7 +29,7 @@
             padding: 15px; 
             box-sizing: border-box; 
             position: relative;
-            justify-content: center; /* Centers the whole group */
+            justify-content: flex-start; /* Changed from center so long lists scroll properly */
         }
 
         #app-screen { display: none; }
