@@ -185,8 +185,24 @@
         }
         .nav-btn.bounce, .back-btn-box.bounce { animation: btnBounce 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-        .btn-prev { background: #e5e5ea; }
-        .btn-next { background: var(--primary); color: white; box-shadow: 0 6px 14px rgba(0,122,255,0.3); }
+        .btn-notyet { background: #FFF3E0; color: #E65100; }
+        .btn-done { background: #34C759; color: white; box-shadow: 0 6px 14px rgba(52,199,89,0.3); }
+
+        /* Badge shown when a previously-Done word comes back as a review filler */
+        .review-badge {
+            display: none;
+            margin: 0 auto 12px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: #E8F8EC;
+            color: #1F9D45;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+        .card.is-review .review-badge { display: block; }
 
         .progress { text-align: center; font-size: 13px; color: var(--text-sec); margin-top: 10px; font-weight: 600; }
         .sync-info { text-align: center; padding: 10px; color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
@@ -227,6 +243,7 @@
 
         <div class="card-container">
             <div id="main-card" class="card" onclick="handleCardClick()">
+                <div class="review-badge">✓ Quick Review</div>
                 <div id="display-word" class="word-text"></div>
                 <div id="display-example" class="example-box"></div>
                 <div id="display-details" class="details-box">
@@ -240,8 +257,8 @@
 
         <div class="bottom-bar">
             <div class="nav-bar">
-                <button class="nav-btn btn-prev" onclick="prevWord(event)">Back</button>
-                <button class="nav-btn btn-next" onclick="nextWord(event)">Next Word</button>
+                <button class="nav-btn btn-notyet" onclick="markNotYet(event)">Not Yet</button>
+                <button class="nav-btn btn-done" onclick="markDone(event)">Done ✓</button>
             </div>
             <div id="progress-text" class="progress"></div>
         </div>
@@ -251,9 +268,17 @@
         const MASTER_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKa_UznG5YNoBdDDz6O1oLPpg27HOeRbvAyEJ430icuHl4ki9gZt3o7VakCabFia3JmAOvTgbASuN8/pub?gid=0&single=true&output=csv";
 
         let db = {};
-        let currentLessonData = [];
-        let currentIndex = 0;
+
+        /* --- Session state (resets every time a lesson opens) --- */
+        let lessonWords = [];      // all words of the active lesson
+        let queue = [];            // upcoming cards, front = next
+        let currentWord = null;    // card on screen
+        let doneCount = {};        // word-key -> number of "Done" presses
         let revealStep = 0;
+        const MIN_GAP = 2;         // a returning word waits behind at least this many cards
+        const DONES_NEEDED = 2;    // a word must be marked Done this many times to finish
+        const wordKey = w => w.word + '|' + w.meaning; // unique id (handles duplicate words)
+        const isMastered = k => (doneCount[k] || 0) >= DONES_NEEDED;
 
         /* ============================================================
            SOUND ENGINE — synthesized "KRING" bell (no audio file needed)
@@ -430,16 +455,23 @@
                 d.onclick = () => {
                     vibrate(15);
                     playTick();
-                    currentLessonData = shuffleArray([...db[name]]);
-                    currentIndex = 0;
-                    document.getElementById('menu-screen').style.display = 'none';
-                    document.getElementById('app-screen').style.display = 'flex';
-                    window.scrollTo(0, 0);
-                    updateCard();
-                    animateCard('next');
+                    startLesson(name);
                 };
                 list.appendChild(d);
             });
+        }
+
+        function startLesson(name) {
+            // Fresh session every time — nothing carries over
+            lessonWords = [...db[name]];
+            queue = shuffleArray([...lessonWords]);
+            doneCount = {};
+            currentWord = queue.shift();
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+            window.scrollTo(0, 0);
+            updateCard();
+            animateCard('next');
         }
 
         function handleCardClick() {
@@ -447,52 +479,142 @@
                 revealStep++;
                 vibrate(10); // tiny haptic on reveal
                 const card = document.getElementById('main-card');
-                card.className = `card reveal-${revealStep} tap-pulse`;
+                const review = card.classList.contains('is-review') ? ' is-review' : '';
+                card.className = `card reveal-${revealStep} tap-pulse${review}`;
                 setTimeout(() => card.classList.remove('tap-pulse'), 200);
             }
         }
 
         function updateCard() {
-            const data = currentLessonData[currentIndex];
+            const data = currentWord;
             revealStep = 0;
-            document.getElementById('main-card').className = 'card';
+            const k = wordKey(data);
+            const card = document.getElementById('main-card');
+            const badge = card.querySelector('.review-badge');
+
+            // Badge tells the learner WHY this word is back
+            if (isMastered(k)) {
+                card.className = 'card is-review';
+                badge.innerText = '✓ Quick Review';       // fully done, just a filler
+            } else if ((doneCount[k] || 0) === 1) {
+                card.className = 'card is-review';
+                badge.innerText = '✓ Once more to finish'; // done 1 of 2 times
+            } else {
+                card.className = 'card';
+            }
+
             document.getElementById('display-word').innerText = data.word;
             document.getElementById('display-example').innerText = data.example;
             document.getElementById('display-meaning').innerText = data.meaning;
             document.getElementById('display-syn').innerHTML = data.syns.filter(s => s).map(s => `<span class="chip syn">${s}</span>`).join('');
             document.getElementById('display-ant').innerHTML = data.ants.filter(a => a).map(a => `<span class="chip ant">${a}</span>`).join('');
-            document.getElementById('progress-text').innerText = `${currentIndex + 1} of ${currentLessonData.length}`;
+            updateProgress();
         }
 
-        function nextWord(e) {
+        function updateProgress() {
+            const total = lessonWords.length;
+            const mastered = lessonWords.filter(w => isMastered(wordKey(w))).length;
+            const halfway = lessonWords.filter(w => (doneCount[wordKey(w)] || 0) === 1).length;
+            let text = `${mastered} of ${total} done`;
+            if (halfway > 0) text += ` · ${halfway} almost`;
+            document.getElementById('progress-text').innerText = text;
+        }
+
+        function pendingCount() {
+            return lessonWords.filter(w => !isMastered(wordKey(w))).length;
+        }
+
+        // Words currently sitting in the queue (by key), to avoid duplicates
+        function queuedKeys() {
+            return new Set(queue.map(wordKey));
+        }
+
+        // Pad the queue with already-mastered words so a returning word
+        // never reappears immediately — your spacing trick.
+        // Mastered words may be reused as fillers multiple times across the session.
+        function padWithFillers(needed, excludeKey) {
+            const inQueue = queuedKeys();
+            let fillers = shuffleArray(
+                lessonWords.filter(w => {
+                    const k = wordKey(w);
+                    return isMastered(k) && k !== excludeKey && !inQueue.has(k);
+                })
+            );
+            let added = 0;
+            for (let i = 0; i < fillers.length && added < needed; i++, added++) {
+                queue.push(fillers[i]);
+            }
+            // Still short (tiny lesson)? Allow mastered words to repeat as fillers
+            while (added < needed && fillers.length > 0) {
+                queue.push(fillers[added % fillers.length]);
+                added++;
+            }
+        }
+
+        // Put a word back into the queue at a random spot, at least MIN_GAP cards away
+        function reinsertWithGap(word) {
+            const k = wordKey(word);
+            if (queue.length < MIN_GAP) {
+                padWithFillers(MIN_GAP - queue.length, k);
+            }
+            const minPos = Math.min(MIN_GAP, queue.length);
+            const pos = minPos + Math.floor(Math.random() * (queue.length - minPos + 1));
+            queue.splice(pos, 0, word);
+        }
+
+        function markDone(e) {
             if (e) bounce(e.currentTarget);
-            vibrate([18, 40, 12]);   // little double-buzz (Android)
+            vibrate([18, 40, 12]);   // double-buzz (Android)
             playKring();             // the bell!
-            if (currentIndex < currentLessonData.length - 1) {
-                currentIndex++;
-                updateCard();
-                animateCard('next');
-            } else {
-                vibrate([30, 60, 30, 60, 60]);
-                setTimeout(() => { alert("Lesson Complete!"); goBack(); }, 250);
+            const k = wordKey(currentWord);
+            doneCount[k] = (doneCount[k] || 0) + 1;
+
+            if (doneCount[k] < DONES_NEEDED) {
+                // First Done — the word will come back once more, later
+                reinsertWithGap(currentWord);
+                showNext();
+                return;
             }
+
+            // Second Done — word is finished for this session
+            if (pendingCount() === 0) {
+                updateProgress();
+                vibrate([30, 60, 30, 60, 60]);
+                setTimeout(() => { alert("Lesson Complete! 🎉 Every word done twice."); goBack(); }, 300);
+                return;
+            }
+            showNext();
         }
 
-        function prevWord(e) {
+        function markNotYet(e) {
             if (e) bounce(e.currentTarget);
-            if (currentIndex > 0) {
-                vibrate(12);
-                playTick();
-                currentIndex--;
-                updateCard();
-                animateCard('prev');
+            vibrate(12);
+            playTick();
+            const k = wordKey(currentWord);
+            doneCount[k] = 0; // forgetting resets progress — it needs 2 fresh Dones again
+
+            reinsertWithGap(currentWord);
+            showNext();
+        }
+
+        function showNext() {
+            if (queue.length === 0) {
+                // Shouldn't happen (pending words are always queued or on screen),
+                // but recover gracefully just in case
+                const left = lessonWords.filter(w => !isMastered(wordKey(w)));
+                queue = shuffleArray(left);
             }
+            currentWord = queue.shift();
+            updateCard();
+            animateCard('next');
         }
 
         function goBack(e) {
             if (e && e.currentTarget) bounce(e.currentTarget);
             vibrate(12);
             playTick();
+            // Session is intentionally discarded — next open starts fresh
+            queue = []; currentWord = null; doneCount = {}; lessonWords = [];
             document.getElementById('menu-screen').style.display = 'flex';
             document.getElementById('app-screen').style.display = 'none';
             window.scrollTo(0, 0);
